@@ -21,7 +21,6 @@ debug=no
 kver="$kver"
 metaver="0"
 metatime=1672531200
-metaonly=no
 maintainer="Zaphod Beeblebrox <zaphod@betelgeuse-seven.western-spiral-arm.change.me.to.match.signing.key>"
 buildargs="-aamd64 -d"
 branch=""
@@ -178,7 +177,7 @@ do
     key=${arg#--}
     val=${key#*=}; key=${key%%=*}
     case "$key" in
-      update|btype|shell|custom|sign|exclude|rename|patch|series|checkbugs|buildmeta|maintainer|debug|kver|metaver|metaonly|metatime|branch|bundle|stype|clean)
+      update|btype|shell|custom|sign|exclude|rename|patch|series|checkbugs|buildmeta|maintainer|debug|kver|metaver|metatime|branch|bundle|stype|clean)
         printf -v "$key" '%s' "$val" ;;
       *) __die 1 "Unknown flag $arg"
     esac
@@ -300,15 +299,11 @@ then
   fi
 fi
 
-echo -e ">>> Args.... metaonly is $metaonly"
-if [ "$metaonly" == "no" ]
-then
-  echo -e "********\n\nApplying default configs\n\n********"
-  echo 'archs="amd64"' > debian.master/etc/kernelconfig
-  fakeroot debian/rules clean defaultconfigs
-  #fakeroot debian/rules importconfigs
-  fakeroot debian/rules clean
-fi
+echo -e "********\n\nApplying default configs\n\n********"
+echo 'archs="amd64"' > debian.master/etc/kernelconfig
+fakeroot debian/rules clean defaultconfigs
+#fakeroot debian/rules importconfigs
+fakeroot debian/rules clean
 
 echo -e ">>> Args.... shell is $shell"
 if [ "$shell" == "yes" ]
@@ -334,11 +329,8 @@ else
 fi
 
 # Build
-if [ "$metaonly" == "no" ]
-then
-  echo -e "********\n\nBuilding packages\nCommand: dpkg-buildpackage --build=$btype $buildargs\n\n********"
-  dpkg-buildpackage --build=$btype $buildargs
-fi
+echo -e "********\n\nBuilding packages\nCommand: dpkg-buildpackage --build=$btype $buildargs\n\n********"
+dpkg-buildpackage --build=$btype $buildargs
 
 echo -e "********\n\nBuilding meta package\n\n********"
 echo -e ">>> Args.... buildmeta is $buildmeta"
