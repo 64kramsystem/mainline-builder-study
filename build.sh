@@ -12,7 +12,6 @@ btype=binary
 shell=no
 custom=no
 sign=no
-flavour=none
 exclude=none
 rename=no
 patch=no
@@ -41,15 +40,15 @@ do_metapackage() {
   METAVER=$2
   METATIME="$(date -d @${3} '+UTC %Y-%m-%d %T')"
   VERSION=$(echo ${KVER} | awk -F. '{printf "%d.%02d", $1,$2 }')
-  FLAVOUR=$4
+  REMOVEME=$4
   SERIES=$5
   MAINT=$6
   ABINUM=$7
   BTYPE=$8
-  BINS="${KVER}-${ABINUM}-${FLAVOUR}"
+  BINS="${KVER}-${ABINUM}-generic"
   DEPS="linux-headers-${BINS}, linux-image-unsigned-${BINS}, linux-modules-${BINS}"
 
-  echo ">>> Metapackage for $FLAVOUR: MetaVersion: $METAVER, MetaTime: $METATIME"
+  echo ">>> Metapackage for generic: MetaVersion: $METAVER, MetaTime: $METATIME"
   [ -d "../meta" ] || mkdir ../meta
   cd ../meta
   cat > metapackage.control <<-EOF
@@ -58,7 +57,7 @@ do_metapackage() {
 		# Homepage: <enter URL here; no default>
 		Standards-Version: 3.9.2
 
-		Package: linux-${FLAVOUR}-${VERSION}
+		Package: linux-generic-${VERSION}
 		Changelog: changelog
 		Version: ${KVER}-${METAVER}
 		Maintainer: ${MAINT}
@@ -72,7 +71,7 @@ do_metapackage() {
 		  linux-modules-5.12.x-generic, linux-headers-5.12.x-generic and linux-headers-5.12.x
 	EOF
 	cat > changelog <<-EOF
-		linux-${FLAVOUR}-${VERSION} (${KVER}-${METAVER}) ${SERIES}; urgency=low
+		linux-generic-${VERSION} (${KVER}-${METAVER}) ${SERIES}; urgency=low
 
 		  Metapackage for Linux ${VERSION}.x
 		  Mainline build at commit: v${KVER}
@@ -80,12 +79,12 @@ do_metapackage() {
 		 -- ${MAINT}  $(date -R)
 	EOF
 
-  mkdir -p "source/usr/share/doc/linux-${FLAVOUR}-${VERSION}"
-  cat > "source/usr/share/doc/linux-${FLAVOUR}-${VERSION}/README" <<-EOF
+  mkdir -p "source/usr/share/doc/linux-generic-${VERSION}"
+  cat > "source/usr/share/doc/linux-generic-${VERSION}/README" <<-EOF
 		This meta-package will always depend on the latest ${VERSION} kernel
 		To see which version that is you can execute:
 
-          $ apt-cache depends linux-${FLAVOUR}-${VERSION}
+          $ apt-cache depends linux-generic-${VERSION}
 
         :wq
 	EOF
@@ -95,9 +94,9 @@ do_metapackage() {
 
   if [ "$native" == "0" ]
   then
-    echo "Extra-Files: source/usr/share/doc/linux-${FLAVOUR}-${VERSION}/README" >> metapackage.control
+    echo "Extra-Files: source/usr/share/doc/linux-generic-${VERSION}/README" >> metapackage.control
   else
-    tar -C source --sort=name --owner=root:0 --group=root:0 --mtime="$METATIME" -zcf "linux-${FLAVOUR}-${VERSION}_${KVER}.orig.tar.gz" .
+    tar -C source --sort=name --owner=root:0 --group=root:0 --mtime="$METATIME" -zcf "linux-generic-${VERSION}_${KVER}.orig.tar.gz" .
   fi
 
   equivs-build metapackage.control
@@ -107,7 +106,7 @@ do_metapackage() {
     equivs-build --source metapackage.control
   fi
 
-  changesfile="linux-${FLAVOUR}-${VERSION}_${KVER}-${METAVER}_source.changes"
+  changesfile="linux-generic-${VERSION}_${KVER}-${METAVER}_source.changes"
   grep "BEGIN PGP SIGNED MESSAGE" "$changesfile" > /dev/null
   signed=$?
 
@@ -185,7 +184,7 @@ do
     key=${arg#--}
     val=${key#*=}; key=${key%%=*}
     case "$key" in
-      update|btype|shell|custom|sign|flavour|exclude|rename|patch|series|checkbugs|buildmeta|maintainer|debug|kver|metaver|metaonly|metatime|haverust|branch|bundle|stype|clean|rustup|dryrun)
+      update|btype|shell|custom|sign|exclude|rename|patch|series|checkbugs|buildmeta|maintainer|debug|kver|metaver|metaonly|metatime|haverust|branch|bundle|stype|clean|rustup|dryrun)
         printf -v "$key" '%s' "$val" ;;
       *) __die 1 "Unknown flag $arg"
     esac
@@ -305,12 +304,8 @@ then
     sed -i -re 's#PYTHON3\s*=\s*python3#PYTHON3 = python3.9#' Makefile
 fi
 
-echo -e ">>> Args.... flavour is $flavour"
-if [ "$flavour" != "none" ]
-then
-  echo -e "********\n\nSetting flavour: $flavour\n\n********"
-  sed -i -re "s/(flavours\s+=).*/\1 $flavour/" debian.master/rules.d/amd64.mk
-fi
+echo -e "********\n\nSetting flavour: generic\n\n********"
+sed -i -re "s/(flavours\s+=).*/\1 generic/" debian.master/rules.d/amd64.mk
 
 echo -e ">>> Args.... exclude is $exclude"
 if [ "$exclude" != "none" ]
@@ -351,23 +346,6 @@ then
     echo ">>>  ---> debian.env bug == yes"
     echo "DEBIAN=debian.master" > debian/debian.env
   fi
-fi
-
-# Make lowlatency changes manually, the flavour was removed in 5.16.12 and newer
-if [ "$flavour" = "lowlatency" -a ! -f debian.master/control.d/vars.lowlatency ]
-then
-  echo ">>> Recreating settings for defunct lowlatency flavour"
-  cat debian.master/control.d/vars.generic | sed -e 's/Generic/Lowlatency/g' > debian.master/control.d/vars.lowlatency
-  touch debian.master/config/amd64/config.flavour.lowlatency
-  ./scripts/config --file debian.master/config/amd64/config.common.amd64 --disable COMEDI_TESTS_EXAMPLE
-  ./scripts/config --file debian.master/config/amd64/config.common.amd64 --disable COMEDI_TESTS_NI_ROUTES
-  ./scripts/config --file debian.master/config/amd64/config.common.amd64 --set-val CONFIG_HZ 1000
-  ./scripts/config --file debian.master/config/amd64/config.common.amd64 --enable HZ_1000
-  ./scripts/config --file debian.master/config/amd64/config.common.amd64 --disable HZ_250
-  ./scripts/config --file debian.master/config/amd64/config.common.amd64 --enable LATENCYTOP
-  ./scripts/config --file debian.master/config/amd64/config.common.amd64 --enable PREEMPT
-  ./scripts/config --file debian.master/config/amd64/config.common.amd64 --disable PREEMPT_VOLUNTARY
-  ./scripts/config --file debian.master/config/amd64/config.common.amd64 --set-val TEST_DIV64 m
 fi
 
 echo -e ">>> Args.... metaonly is $metaonly"
@@ -417,25 +395,8 @@ echo -e "********\n\nBuilding meta package\n\n********"
 echo -e ">>> Args.... buildmeta is $buildmeta"
 if [ "$buildmeta" == "yes" ]
 then
-  if [ "$dryrun" == "yes" ]
-  then
-    echo -e "********\n\nDry-run\nCommand: dpkg-buildpackage --build=$btype $buildargs"
-    echo "do_metapackage "${kver:1}" "${metaver}" "${metatime}" "generic" "$series" "$maintainer" "$abinum" "$btype""
-    echo "dry-run shell"
-    bash
-  elif [ "$flavour" == "none" ]
-  then
-    echo ">>> Building generic metapackage"
-    do_metapackage "${kver:1}" "${metaver}" "${metatime}" "generic" "$series" "$maintainer" "$abinum" "$btype"
-    if [ -f debian.master/control.d/vars.lowlatency ]
-    then
-      echo ">>> Building lowlatency metapackage"
-      do_metapackage "${kver:1}" "${metaver}" "${metatime}" "lowlatency" "$series" "$maintainer" "$abinum" "$btype"
-    fi
-  else
-    echo ">>> Building $flavour metapackage"
-    do_metapackage "${kver:1}" "${metaver}" "${metatime}" "$flavour" "$series" "$maintainer" "$abinum" "$btype"
-  fi
+  echo ">>> Building generic metapackage"
+  do_metapackage "${kver:1}" "${metaver}" "${metatime}" REMOVEME "$series" "$maintainer" "$abinum" "$btype"
 fi
 
 echo -e "********\n\nMoving packages to debs folder\n\n********"
