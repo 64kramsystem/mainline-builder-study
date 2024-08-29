@@ -8,7 +8,6 @@ export LANG=C
 
 update=yes
 btype=binary
-shell=no
 sign=no
 exclude=none
 rename=no
@@ -174,7 +173,7 @@ do
     key=${arg#--}
     val=${key#*=}; key=${key%%=*}
     case "$key" in
-      update|btype|shell|sign|exclude|rename|series|checkbugs|maintainer|debug|kver|metaver|metatime|branch|bundle|stype|clean)
+      update|btype|sign|exclude|rename|series|checkbugs|maintainer|debug|kver|metaver|metatime|branch|bundle|stype|clean)
         printf -v "$key" '%s' "$val" ;;
       *) __die 1 "Unknown flag $arg"
     esac
@@ -282,13 +281,6 @@ fakeroot debian/rules clean defaultconfigs
 #fakeroot debian/rules importconfigs
 fakeroot debian/rules clean
 
-echo -e ">>> Args.... shell is $shell"
-if [ "$shell" == "yes" ]
-then
-  echo -e "********\n\nPre-build shell, exit or ctrl-d to continue build\n\n********"
-  bash
-fi
-
 # Build
 echo -e "********\n\nBuilding packages\nCommand: dpkg-buildpackage --build=$btype $buildargs\n\n********"
 dpkg-buildpackage --build=$btype $buildargs
@@ -299,12 +291,6 @@ do_metapackage "${kver:1}" "${metaver}" "${metatime}" REMOVEME REMOVEME "$mainta
 echo -e "********\n\nMoving packages to debs folder\n\n********"
 [ -d "$kdeb/$kver" ] || mkdir "$kdeb/$kver"
 mv "$ksrc"/../*.* "$kdeb/$kver"
-
-if [ "$shell" == "yes" ]
-then
-  echo -e "********\n\nPost-build shell, exit or ctrl-d to finish\n\n********"
-  bash
-fi
 
 if [ "$clean" == "yes" ]
 then
