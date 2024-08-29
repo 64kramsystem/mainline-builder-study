@@ -9,7 +9,6 @@ export LANG=C
 update=yes
 btype=binary
 shell=no
-custom=no
 sign=no
 exclude=none
 rename=no
@@ -175,7 +174,7 @@ do
     key=${arg#--}
     val=${key#*=}; key=${key%%=*}
     case "$key" in
-      update|btype|shell|custom|sign|exclude|rename|series|checkbugs|maintainer|debug|kver|metaver|metatime|branch|bundle|stype|clean)
+      update|btype|shell|sign|exclude|rename|series|checkbugs|maintainer|debug|kver|metaver|metatime|branch|bundle|stype|clean)
         printf -v "$key" '%s' "$val" ;;
       *) __die 1 "Unknown flag $arg"
     esac
@@ -288,22 +287,6 @@ if [ "$shell" == "yes" ]
 then
   echo -e "********\n\nPre-build shell, exit or ctrl-d to continue build\n\n********"
   bash
-fi
-
-echo -e ">>> Args.... custom is $custom"
-if [ "$custom" == "yes" ]
-then
-  echo -e "********\n\nYou have asked for a custom build.\nYou will be given the chance to makemenuconfig next.\n\n********"
-  read -p 'Press return to continue...' foo
-  fakeroot debian/rules editconfigs
-else
-  if [ -x "/custom/${custom}-patch.sh" ]
-  then
-    echo -e "********\n\nYou have asked for a custom build.\nPatching source with /custom/${custom}-patch.sh\n\n********"
-    /custom/${custom}-patch.sh
-    read -p 'Press return to continue...' foo
-    fakeroot debian/rules editconfigs
-  fi
 fi
 
 # Build
