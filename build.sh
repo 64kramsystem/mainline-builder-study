@@ -33,7 +33,7 @@ do_metapackage() {
   REMOVEME=$5
   MAINT=$6
   ABINUM=$7
-  BTYPE=$8
+  REMOVEME=$8
   BINS="${KVER}-${ABINUM}-generic"
   DEPS="linux-headers-${BINS}, linux-image-unsigned-${BINS}, linux-modules-${BINS}"
 
@@ -89,11 +89,6 @@ do_metapackage() {
   fi
 
   equivs-build metapackage.control
-  if [ "$BTYPE" == "source" ]
-  then
-    echo ">>> Building source"
-    equivs-build --source metapackage.control
-  fi
 
   changesfile="linux-generic-${VERSION}_${KVER}-${METAVER}_source.changes"
   grep "BEGIN PGP SIGNED MESSAGE" "$changesfile" > /dev/null
@@ -173,7 +168,7 @@ do
     key=${arg#--}
     val=${key#*=}; key=${key%%=*}
     case "$key" in
-      update|btype|sign|exclude|rename|series|checkbugs|maintainer|debug|kver|metaver|metatime|branch|bundle|stype|clean)
+      update|sign|exclude|rename|series|checkbugs|maintainer|debug|kver|metaver|metatime|branch|bundle|stype|clean)
         printf -v "$key" '%s' "$val" ;;
       *) __die 1 "Unknown flag $arg"
     esac
@@ -286,7 +281,7 @@ echo -e "********\n\nBuilding packages\nCommand: dpkg-buildpackage --build=$btyp
 dpkg-buildpackage --build=$btype $buildargs
 
 echo ">>> Building generic metapackage"
-do_metapackage "${kver:1}" "${metaver}" "${metatime}" REMOVEME REMOVEME "$maintainer" "$abinum" "$btype"
+do_metapackage "${kver:1}" "${metaver}" "${metatime}" REMOVEME REMOVEME "$maintainer" "$abinum" REMOVEME
 
 echo -e "********\n\nMoving packages to debs folder\n\n********"
 [ -d "$kdeb/$kver" ] || mkdir "$kdeb/$kver"
