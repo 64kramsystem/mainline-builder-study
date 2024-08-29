@@ -16,7 +16,6 @@ rename=no
 patch=no
 series=jammy
 checkbugs=yes
-buildmeta=no
 debug=no
 kver="$kver"
 metaver="0"
@@ -177,7 +176,7 @@ do
     key=${arg#--}
     val=${key#*=}; key=${key%%=*}
     case "$key" in
-      update|btype|shell|custom|sign|exclude|rename|patch|series|checkbugs|buildmeta|maintainer|debug|kver|metaver|metatime|branch|bundle|stype|clean)
+      update|btype|shell|custom|sign|exclude|rename|patch|series|checkbugs|maintainer|debug|kver|metaver|metatime|branch|bundle|stype|clean)
         printf -v "$key" '%s' "$val" ;;
       *) __die 1 "Unknown flag $arg"
     esac
@@ -332,13 +331,8 @@ fi
 echo -e "********\n\nBuilding packages\nCommand: dpkg-buildpackage --build=$btype $buildargs\n\n********"
 dpkg-buildpackage --build=$btype $buildargs
 
-echo -e "********\n\nBuilding meta package\n\n********"
-echo -e ">>> Args.... buildmeta is $buildmeta"
-if [ "$buildmeta" == "yes" ]
-then
-  echo ">>> Building generic metapackage"
-  do_metapackage "${kver:1}" "${metaver}" "${metatime}" REMOVEME REMOVEME "$maintainer" "$abinum" "$btype"
-fi
+echo ">>> Building generic metapackage"
+do_metapackage "${kver:1}" "${metaver}" "${metatime}" REMOVEME REMOVEME "$maintainer" "$abinum" "$btype"
 
 echo -e "********\n\nMoving packages to debs folder\n\n********"
 [ -d "$kdeb/$kver" ] || mkdir "$kdeb/$kver"
