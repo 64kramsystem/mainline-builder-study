@@ -5,7 +5,6 @@
 set -u
 
 export LANG=C
-export RUST_BACKTRACE=full
 
 update=yes
 btype=binary
@@ -33,7 +32,6 @@ dryrun=no
 
 # Set these both to yes if you want to to install the required rust version and build a rust enabled kernel
 rustup=no
-haverust=no
 
 do_metapackage() {
   KVER=$1
@@ -184,7 +182,7 @@ do
     key=${arg#--}
     val=${key#*=}; key=${key%%=*}
     case "$key" in
-      update|btype|shell|custom|sign|exclude|rename|patch|series|checkbugs|buildmeta|maintainer|debug|kver|metaver|metaonly|metatime|haverust|branch|bundle|stype|clean|rustup|dryrun)
+      update|btype|shell|custom|sign|exclude|rename|patch|series|checkbugs|buildmeta|maintainer|debug|kver|metaver|metaonly|metatime|branch|bundle|stype|clean|rustup|dryrun)
         printf -v "$key" '%s' "$val" ;;
       *) __die 1 "Unknown flag $arg"
     esac
@@ -279,19 +277,6 @@ elif [ "$series" == "jammy" ]
 then
   echo -e ">>> Downgrade GCC to version 12 on focal"
   sed -i -re 's/export gcc\?=.*/export gcc?=gcc-12/' debian/rules.d/0-common-vars.mk
-fi
-
-# Remove rust dependencies if $haverust is "no". Defaults to "no" on focal and "yes" on others.
-echo -e ">>> Args.... haverust is $haverust"
-if [ "$haverust" == "no" ]
-then
-  if [ "$abinum" -ge "060100" ]
-  then
-    echo -e ">>> Removing deps and disabling rust in kernel"
-    sed -i -re 's/^ (rust|bindgen|clang|llvm)(.*)/#\1\2/g' debian.master/control.stub.in
-    sed -i -re "s#CONFIG_HAVE_RUST.*#CONFIG_HAVE_RUST                                policy<{'amd64': 'n'}>#" debian.master/config/annotations
-    sed -i -re "s#CONFIG_RUST_IS_AVAILABLE.*#CONFIG_RUST_IS_AVAILABLE                        policy<{'amd64': 'n'}>#" debian.master/config/annotations
-  fi
 fi
 
 # force python3 to python3.9 in focal
