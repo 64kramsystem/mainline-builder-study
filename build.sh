@@ -10,7 +10,6 @@ update=yes
 btype=binary
 sign=no
 exclude=none
-rename=no
 series=jammy
 checkbugs=yes
 kver="$kver"
@@ -167,7 +166,7 @@ do
     key=${arg#--}
     val=${key#*=}; key=${key%%=*}
     case "$key" in
-      update|sign|exclude|rename|series|checkbugs|maintainer|kver|metaver|metatime|branch|bundle|stype|clean)
+      update|sign|exclude|series|checkbugs|maintainer|kver|metaver|metatime|branch|bundle|stype|clean)
         printf -v "$key" '%s' "$val" ;;
       *) __die 1 "Unknown flag $arg"
     esac
@@ -202,20 +201,7 @@ fi
 echo -e "********\n\nRenaming source package and updating control files\n\n********"
 debversion=$(date +%Y%m%d%H%M)
 abinum=$(echo ${kver:1} | awk -F. '{printf "%02d%02d%02d", $1,$2,$3 }')
-echo -e ">>> Args.... rename is $rename"
-if [ "$rename" == "yes" ]
-then
-  sed -i -re "s/(^linux) \(([0-9]+\.[0-9]+\.[0-9]+)-([^\.]*)\.[0-9]+\) ([^;]*)(.*)/linux-${kver:1} (${kver:1}-${abinum}.${debversion}) ${series}\5/" debian.master/changelog
-  sed -i -re 's/SRCPKGNAME/linux/g' debian.master/control.stub.in
-  sed -i -re 's/SRCPKGNAME/linux/g' debian.master/control.d/flavour-control.stub
-  sed -i -re "s/Source: linux/Source: linux-${kver:1}/" debian.master/control.stub.in
-  sed -i -re "s/^(Package:\s+)(linux(-cloud[-tools]*|-tools)(-common|-host))$/\1\2-PKGVER/" debian.master/control.stub.in
-  sed -i -re "s/^(Depends:\s+.*, )(linux(-cloud[-tools]*|-tools)(-common|-host))$/\1\2-PKGVER/" debian.master/control.stub.in
-  sed -i -re "s/indep_hdrs_pkg_name=[^-]*/indep_hdrs_pkg_name=linux/" debian/rules.d/0-common-vars.mk
-  sed -i -re "s/rust_pkg_name=[^-]*/rust_pkg_name=linux/" debian/rules.d/0-common-vars.mk
-else
-  sed -i -re "s/(^linux) \(([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+)\.[0-9]+\) ([^;]*)(.*)/linux (${kver:1}-${abinum}.${debversion}) ${series}\5/" debian.master/changelog
-fi
+sed -i -re "s/(^linux) \(([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+)\.[0-9]+\) ([^;]*)(.*)/linux (${kver:1}-${abinum}.${debversion}) ${series}\5/" debian.master/changelog
 sed -i -re 's/dwarves \[/dwarves (>=1.21) \[/g' debian.master/control.stub.in
 
 # don't fail if we find no *.ko files in the build dir
