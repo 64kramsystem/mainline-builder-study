@@ -1,4 +1,7 @@
 #!/bin/bash
+
+# shellcheck disable=all
+
 set -u
 
 export LANG=C
