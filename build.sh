@@ -13,7 +13,6 @@ exclude=none
 rename=no
 series=jammy
 checkbugs=yes
-debug=no
 kver="$kver"
 metaver="0"
 metatime=1672531200
@@ -168,7 +167,7 @@ do
     key=${arg#--}
     val=${key#*=}; key=${key%%=*}
     case "$key" in
-      update|sign|exclude|rename|series|checkbugs|maintainer|debug|kver|metaver|metatime|branch|bundle|stype|clean)
+      update|sign|exclude|rename|series|checkbugs|maintainer|kver|metaver|metatime|branch|bundle|stype|clean)
         printf -v "$key" '%s' "$val" ;;
       *) __die 1 "Unknown flag $arg"
     esac
@@ -248,13 +247,6 @@ then
       echo "disable_d_i     = true" >> debian.master/rules.d/amd64.mk
     fi
   done
-fi
-
-echo -e ">>> Args.... debug is $debug"
-if [ "$debug" == yes ]
-then
-  echo -e "********\n\nEnabling Debug packages\n\n********\n"
-  sed -i -re "s/skipdbg\s*=\s*true/skipdbg = false/g" debian/rules.d/0-common-vars.mk
 fi
 
 echo -e ">>> Args.... checkbugs is $checkbugs"
