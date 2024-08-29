@@ -19,7 +19,6 @@ maintainer="Zaphod Beeblebrox <zaphod@betelgeuse-seven.western-spiral-arm.change
 buildargs="-aamd64 -d"
 branch=""
 bundle=no
-stype=crack
 clean=no
 
 do_metapackage() {
@@ -112,27 +111,15 @@ __update_sources() {
 
   if [ -z "${branch}" ]
   then
-    if [ ${stype} == "crack" ]
-    then
-      branch="cod/mainline/${kver}"
-    else
-      branch="${kver}"
-    fi
+    branch="${kver}"
   fi
 
   if [ "${update}" == "new" ]
   then
     [ "$(ls -A /home/source)" != "" ] && __die 1 "/home/source must be empty when using 'update=new'"
-    if [ ${stype} == "crack" ]
-    then
-      echo -e "********\n\nFetching git source from Launchpad, branch: $branch\n\n********"
-      git clone --depth 1 git://git.launchpad.net/~ubuntu-kernel-test/ubuntu/+source/linux/+git/mainline-crack \
-        --branch "${branch}" /home/source --single-branch || __die 1 "Failed to checkout source from launchpad"
-    else
-      echo -e "********\n\nFetching git source from Kernel.org, branch: $branch\n\n********"
-      git clone --depth 1 https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git \
-        --branch "${branch}" /home/source --single-branch || __die 1 "Failed to checkout source from kernel.org"
-    fi
+    echo -e "********\n\nFetching git source from Kernel.org, branch: $branch\n\n********"
+    git clone --depth 1 https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git \
+      --branch "${branch}" /home/source --single-branch || __die 1 "Failed to checkout source from kernel.org"
   else
     echo -e "********\n\nCleaning git source tree\n\n********"
     git clean -fdx || __die 1 'git failed'
@@ -166,7 +153,7 @@ do
     key=${arg#--}
     val=${key#*=}; key=${key%%=*}
     case "$key" in
-      update|sign|exclude|series|checkbugs|maintainer|kver|metaver|metatime|branch|bundle|stype|clean)
+      update|sign|exclude|series|checkbugs|maintainer|kver|metaver|metatime|branch|bundle|clean)
         printf -v "$key" '%s' "$val" ;;
       *) __die 1 "Unknown flag $arg"
     esac
