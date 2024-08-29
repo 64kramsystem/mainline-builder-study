@@ -28,7 +28,6 @@ branch=""
 bundle=no
 stype=crack
 clean=no
-dryrun=no
 
 do_metapackage() {
   KVER=$1
@@ -179,7 +178,7 @@ do
     key=${arg#--}
     val=${key#*=}; key=${key%%=*}
     case "$key" in
-      update|btype|shell|custom|sign|exclude|rename|patch|series|checkbugs|buildmeta|maintainer|debug|kver|metaver|metaonly|metatime|branch|bundle|stype|clean|dryrun)
+      update|btype|shell|custom|sign|exclude|rename|patch|series|checkbugs|buildmeta|maintainer|debug|kver|metaver|metaonly|metatime|branch|bundle|stype|clean)
         printf -v "$key" '%s' "$val" ;;
       *) __die 1 "Unknown flag $arg"
     esac
@@ -357,10 +356,7 @@ fi
 if [ "$metaonly" == "no" ]
 then
   echo -e "********\n\nBuilding packages\nCommand: dpkg-buildpackage --build=$btype $buildargs\n\n********"
-  if [ "$dryrun" == "no" ]
-  then
-    dpkg-buildpackage --build=$btype $buildargs
-  fi
+  dpkg-buildpackage --build=$btype $buildargs
 fi
 
 echo -e "********\n\nBuilding meta package\n\n********"
