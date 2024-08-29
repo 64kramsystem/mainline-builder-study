@@ -30,9 +30,6 @@ stype=crack
 clean=no
 dryrun=no
 
-# Set these both to yes if you want to to install the required rust version and build a rust enabled kernel
-rustup=no
-
 do_metapackage() {
   KVER=$1
   METAVER=$2
@@ -182,7 +179,7 @@ do
     key=${arg#--}
     val=${key#*=}; key=${key%%=*}
     case "$key" in
-      update|btype|shell|custom|sign|exclude|rename|patch|series|checkbugs|buildmeta|maintainer|debug|kver|metaver|metaonly|metatime|branch|bundle|stype|clean|rustup|dryrun)
+      update|btype|shell|custom|sign|exclude|rename|patch|series|checkbugs|buildmeta|maintainer|debug|kver|metaver|metaonly|metatime|branch|bundle|stype|clean|dryrun)
         printf -v "$key" '%s' "$val" ;;
       *) __die 1 "Unknown flag $arg"
     esac
@@ -211,16 +208,6 @@ __update_sources
 if [ "${bundle}" == "yes" ]
 then
   __unbundle
-fi
-
-# install rust if requested
-if [ "$rustup" == "yes" ]
-then
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-  /root/.cargo/bin/rustup override set $(scripts/min-tool-version.sh rustc)
-  /root/.cargo/bin/rustup component add rust-src
-  /root/.cargo/bin/cargo install --locked --version $(scripts/min-tool-version.sh bindgen) bindgen-cli
-  cp /root/.cargo/bin/* /usr/local/bin
 fi
 
 # Apply patch if requested
