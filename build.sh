@@ -18,7 +18,6 @@ metatime=1672531200
 maintainer="Zaphod Beeblebrox <zaphod@betelgeuse-seven.western-spiral-arm.change.me.to.match.signing.key>"
 buildargs="-aamd64 -d"
 branch=""
-bundle=no
 clean=no
 
 do_metapackage() {
@@ -134,14 +133,6 @@ __update_sources() {
   fi
 }
 
-__unbundle() {
-  cd /home/source/
-  wget "https://kernel.ubuntu.com/~kernel-ppa/mainline/${kver}/crack.bundle" || __die 1 "Failed to download bundle from ubuntu.com"
-  git bundle verify crack.bundle || __die 1 "bundle will not apply"
-  git bundle unbundle crack.bundle || __die 1 "Failed to unbundle"
-  git checkout $(git bundle list-heads crack.bundle | grep "${kver}" | awk '{ print $1 }') || __die 1 "failed to checkout commit"
-}
-
 echo -e "********\n\nBuild starting\n\n********"
 
 args=( "$@" );
@@ -153,7 +144,7 @@ do
     key=${arg#--}
     val=${key#*=}; key=${key%%=*}
     case "$key" in
-      update|sign|exclude|series|checkbugs|maintainer|kver|metaver|metatime|branch|bundle|clean)
+      update|sign|exclude|series|checkbugs|maintainer|kver|metaver|metatime|branch|clean)
         printf -v "$key" '%s' "$val" ;;
       *) __die 1 "Unknown flag $arg"
     esac
@@ -178,11 +169,6 @@ cd "$ksrc" || __die 1 "\$ksrc ${ksrc@Q} not found"
 git config --global --add safe.directory /home/source
 
 __update_sources
-
-if [ "${bundle}" == "yes" ]
-then
-  __unbundle
-fi
 
 # prep
 echo -e "********\n\nRenaming source package and updating control files\n\n********"
