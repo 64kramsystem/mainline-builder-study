@@ -13,7 +13,6 @@ custom=no
 sign=no
 exclude=none
 rename=no
-patch=no
 series=jammy
 checkbugs=yes
 debug=no
@@ -176,7 +175,7 @@ do
     key=${arg#--}
     val=${key#*=}; key=${key%%=*}
     case "$key" in
-      update|btype|shell|custom|sign|exclude|rename|patch|series|checkbugs|maintainer|debug|kver|metaver|metatime|branch|bundle|stype|clean)
+      update|btype|shell|custom|sign|exclude|rename|series|checkbugs|maintainer|debug|kver|metaver|metatime|branch|bundle|stype|clean)
         printf -v "$key" '%s' "$val" ;;
       *) __die 1 "Unknown flag $arg"
     esac
@@ -205,26 +204,6 @@ __update_sources
 if [ "${bundle}" == "yes" ]
 then
   __unbundle
-fi
-
-# Apply patch if requested
-echo -e ">>> Args.... patch is $patch"
-if [ "$patch" != "no" ]
-then
-  echo -e "********\n\nDownloading and patching cod/mainline/${kver} to $patch\n\n********"
-  if [[ "$patch" =~ v[0-9]+\.[0-9]+\.[0-9]* ]]
-  then
-    # apply patch
-    curl -s https://cdn.kernel.org/pub/linux/kernel/${patch/.*/}.x/patch-${patch:1}.xz > /home/patch.xz
-    ret=$?
-    [ $ret -ne 0 ] && __die $ret "Failed to download patch. Code: $ret"
-    xzcat /home/patch.xz |  patch -p1 --forward -r -
-    ret=$?
-    [ $ret -gt 1 ] && __die $ret "Patching failed. Code $ret"
-    kver="$patch"
-  else
-    __die 1 "Patch version should be a kernel version, Eg v5.11.19"
-  fi
 fi
 
 # prep
