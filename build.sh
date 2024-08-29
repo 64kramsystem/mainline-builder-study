@@ -14,7 +14,7 @@ sign=no
 exclude=none
 rename=no
 patch=no
-series=${series:-"jammy"}
+series=jammy
 checkbugs=yes
 buildmeta=no
 debug=no
@@ -35,7 +35,7 @@ do_metapackage() {
   METATIME="$(date -d @${3} '+UTC %Y-%m-%d %T')"
   VERSION=$(echo ${KVER} | awk -F. '{printf "%d.%02d", $1,$2 }')
   REMOVEME=$4
-  SERIES=$5
+  REMOVEME=$5
   MAINT=$6
   ABINUM=$7
   BTYPE=$8
@@ -65,7 +65,7 @@ do_metapackage() {
 		  linux-modules-5.12.x-generic, linux-headers-5.12.x-generic and linux-headers-5.12.x
 	EOF
 	cat > changelog <<-EOF
-		linux-generic-${VERSION} (${KVER}-${METAVER}) ${SERIES}; urgency=low
+		linux-generic-${VERSION} (${KVER}-${METAVER}) ${series}; urgency=low
 
 		  Metapackage for Linux ${VERSION}.x
 		  Mainline build at commit: v${KVER}
@@ -252,28 +252,9 @@ sed -i -re 's/dwarves \[/dwarves (>=1.21) \[/g' debian.master/control.stub.in
 # don't fail if we find no *.ko files in the build dir
 sed -i -re 's/zstd -19 --quiet --rm/zstd -19 --rm || true/g' debian/rules.d/2-binary-arch.mk
 
-# undo GCC-11 update in focal
-echo -e ">>> Args.... series is $series"
-if [ "$series" == "focal" ]
-then
-  echo -e ">>> Downgrade GCC to version 9 on focal"
-  sed -i -re 's/export gcc\?=.*/export gcc?=gcc-9/' debian/rules.d/0-common-vars.mk
 # revert GCC to v12 on Jammy
-elif [ "$series" == "jammy" ]
-then
-  echo -e ">>> Downgrade GCC to version 12 on focal"
-  sed -i -re 's/export gcc\?=.*/export gcc?=gcc-12/' debian/rules.d/0-common-vars.mk
-fi
-
-# force python3 to python3.9 in focal
-if [ "$series" == "focal" ]
-then
-    echo -e ">>> Forcing python3.9 on focal"
-    sed -i -re 's#PYTHON=python3#PYTHON=python3.9\nexport PATH=$(shell pwd)/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin#' debian/rules
-    sed -i -re 's#dh_clean#dh_clean\n\n\trm -rf bin\n\tmkdir bin\n\tln -sf /usr/bin/python3.9 bin/python3\n\tenv\n\tpython3 --version\n#' debian/rules
-    sed -i -re 's# python3-dev <!stage1>,# python3-dev <!stage1>,\n python3.9-dev <!stage1>,\n python3.9-minimal <!stage1>,#g' debian.master/control.stub.in
-    sed -i -re 's#PYTHON3\s*=\s*python3#PYTHON3 = python3.9#' Makefile
-fi
+echo -e ">>> Downgrade GCC to version 12 on focal"
+sed -i -re 's/export gcc\?=.*/export gcc?=gcc-12/' debian/rules.d/0-common-vars.mk
 
 echo -e "********\n\nSetting flavour: generic\n\n********"
 sed -i -re "s/(flavours\s+=).*/\1 generic/" debian.master/rules.d/amd64.mk
@@ -364,7 +345,7 @@ echo -e ">>> Args.... buildmeta is $buildmeta"
 if [ "$buildmeta" == "yes" ]
 then
   echo ">>> Building generic metapackage"
-  do_metapackage "${kver:1}" "${metaver}" "${metatime}" REMOVEME "$series" "$maintainer" "$abinum" "$btype"
+  do_metapackage "${kver:1}" "${metaver}" "${metatime}" REMOVEME REMOVEME "$maintainer" "$abinum" "$btype"
 fi
 
 echo -e "********\n\nMoving packages to debs folder\n\n********"
